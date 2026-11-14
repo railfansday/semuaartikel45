@@ -17,21 +17,17 @@ DB_PATH = "database.sqlite"
 RSS_FILE = "rss_list.txt"
 OUTPUT_DIR = "."
 
-# Otomatis membaca username & nama repo dari GitHub Actions (contoh: "railfansday/semuaartikel44")
 GH_REPO = os.environ.get("GITHUB_REPOSITORY", "")
 if "/" in GH_REPO:
     gh_owner, gh_name = GH_REPO.split("/", 1)
     BASE_URL = f"https://{gh_owner.lower()}.github.io/{gh_name}"
 else:
-    # Fallback jika dijalankan manual di komputer lokal
-    BASE_URL = "https://railfansday.github.io/semuaartikel44"
+    BASE_URL = "https://railfansday.github.io/semuaartikel45"
 
-# Header HTTP agar scraping tidak diblokir
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 }
 
-# Kamus sinonim bahasa Inggris untuk variasi kata alami (judul & isi)
 EN_SYNONYMS = {
     r'\bannounced\b': ['unveiled', 'revealed', 'declared', 'confirmed'],
     r'\bannounces\b': ['unveils', 'reveals', 'introduces', 'confirms'],
@@ -55,7 +51,6 @@ EN_SYNONYMS = {
     r'\bcurrently\b': ['presently', 'at the moment', 'right now']
 }
 
-# Kata kunci deteksi kategori otomatis
 CATEGORY_RULES = {
     "AI & Tech": ["ai", "openai", "claude", "gemini", "llm", "chatgpt", "robot", "software", "cloud", "google", "microsoft", "meta", "anthropic"],
     "Hardware & Chips": ["nvidia", "amd", "intel", "chip", "gpu", "cpu", "semiconductor", "tsmc", "processor", "laptop", "gaming"],
@@ -86,9 +81,6 @@ def apply_synonym_spin(text):
                 text = re.sub(pattern, replace_match, text, count=1, flags=re.IGNORECASE)
     return text
 
-# --------------------------------------------------------------------------
-# FUNGSI PARAFRASE JUDUL & KONTEN BAHASA INGGRIS
-# --------------------------------------------------------------------------
 def paraphrase_title(title):
     if not title or title == 'Tanpa Judul':
         return title
@@ -133,9 +125,6 @@ def local_paraphrase(text_html):
     except Exception:
         return text_html
 
-# --------------------------------------------------------------------------
-# FUNGSI PENDUKUNG UI, ANALISIS KONTEN & SEO TINGKAT LANJUT
-# --------------------------------------------------------------------------
 def detect_category(title):
     title_lower = str(title).lower()
     for category, keywords in CATEGORY_RULES.items():
@@ -368,9 +357,6 @@ def generate_rss_feed(rows):
     with open(rss_path, "w", encoding="utf-8") as f:
         f.write(rss_content)
 
-# --------------------------------------------------------------------------
-# KODE IKLAN ADSTERRA
-# --------------------------------------------------------------------------
 ADSTERRA_CODE = """
 <div style="text-align:center; margin:20px 0;">
     <script type="text/javascript">
@@ -386,9 +372,6 @@ ADSTERRA_CODE = """
 </div>
 """
 
-# --------------------------------------------------------------------------
-# INISIALISASI DATABASE
-# --------------------------------------------------------------------------
 def init_db():
     db_dir = os.path.dirname(DB_PATH)
     if db_dir:
@@ -417,9 +400,6 @@ def init_db():
     conn.commit()
     conn.close()
 
-# --------------------------------------------------------------------------
-# EXTRACT KONTEN + GAMBAR + TANGGAL
-# --------------------------------------------------------------------------
 def extract_full_content(url):
     try:
         response = requests.get(url, headers=HEADERS, timeout=8)
@@ -448,9 +428,6 @@ def extract_full_content(url):
     except Exception:
         return None, None, None
 
-# --------------------------------------------------------------------------
-# PROCESS SINGLE FEED
-# --------------------------------------------------------------------------
 def process_single_feed(feed_url):
     feed_url = feed_url.strip()
     if not feed_url or feed_url.startswith("#"):
@@ -516,9 +493,6 @@ def process_single_feed(feed_url):
         pass
     return baru, duplikat
 
-# --------------------------------------------------------------------------
-# GENERATE SITEMAP.XML, ROBOTS.TXT & FEED.XML
-# --------------------------------------------------------------------------
 def generate_sitemap_and_robots():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -554,9 +528,6 @@ def generate_sitemap_and_robots():
 
     generate_rss_feed(articles)
 
-# --------------------------------------------------------------------------
-# EXPORT KE INDEX.HTML & PAGE2.HTML
-# --------------------------------------------------------------------------
 def export_to_two_files():
     if not os.path.exists(DB_PATH):
         return
@@ -1083,7 +1054,7 @@ def export_to_two_files():
                     <div class="article-meta">📅 {tgl_pub} • ⏱️ {read_mins} min read ({word_count} words)</div>
                 </div>
                 <div class="card-actions">
-                    <button class="btn" onclick="openModal({artikel_id}, '{safe_title}', '{link}')">📖 Baca</button>
+                    <button class="btn" onclick="openModal({artikel_id})">📖 Baca</button>
                     <button class="btn btn-save" id="save-btn-{artikel_id}" onclick="toggleBookmark({artikel_id})">🔖 Save</button>
                     <button class="btn btn-share" onclick="copyShareLink({artikel_id}, this)">🔗 Share</button>
                     <button class="btn btn-pdf" onclick="downloadPDF('content-{artikel_id}', '{safe_title}')">📄 PDF</button>
@@ -1146,7 +1117,6 @@ def export_to_two_files():
         let currentCategory = 'All';
         let modalFontSize = 16;
         let activeReadingId = null;
-        let currentUtterance = null;
 
         function getSavedIds() {{
             try {{ return JSON.parse(localStorage.getItem('savedArticles') || '[]'); }} catch (e) {{ return []; }}
@@ -1321,7 +1291,7 @@ def export_to_two_files():
                 let timeEl = document.getElementById('modalBody').querySelector('#timeRemaining-' + activeReadingId);
                 if (timeEl) {{
                     let remainingMin = Math.max(1, Math.round((1 - (scrollTop / (scrollHeight || 1))) * 3));
-                    timeEl.innerText = `⏱️ ~${remainingMin} mins left to finish`;
+                    timeEl.innerText = `⏱️ ~${{remainingMin}} mins left to finish`;
                 }}
             }}
         }}
@@ -1348,10 +1318,10 @@ def export_to_two_files():
             let url = encodeURIComponent(window.location.origin + window.location.pathname + '#artikel-' + id);
             let text = encodeURIComponent(title);
             let shareLink = '';
-            if (platform === 'whatsapp') shareLink = `https://api.whatsapp.com/send?text=${text}%20${url}`;
-            else if (platform === 'twitter') shareLink = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
-            else if (platform === 'facebook') shareLink = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-            else if (platform === 'telegram') shareLink = `https://t.me/share/url?url=${url}&text=${text}`;
+            if (platform === 'whatsapp') shareLink = `https://api.whatsapp.com/send?text=${{text}}%20${{url}}`;
+            else if (platform === 'twitter') shareLink = `https://twitter.com/intent/tweet?text=${{text}}&url=${{url}}`;
+            else if (platform === 'facebook') shareLink = `https://www.facebook.com/sharer/sharer.php?u=${{url}}`;
+            else if (platform === 'telegram') shareLink = `https://t.me/share/url?url=${{url}}&text=${{text}}`;
             if (shareLink) window.open(shareLink, '_blank');
         }}
 
@@ -1435,9 +1405,6 @@ def export_to_two_files():
 
         print(f"✅ Katalog Grid HTML: {output_file} ({len(chunk)} artikel) | Domain: {BASE_URL}")
 
-# --------------------------------------------------------------------------
-# SCRAPE UTAMA
-# --------------------------------------------------------------------------
 def scrape_massive_rss():
     if not os.path.exists(RSS_FILE):
         print(f"[ERROR] File {RSS_FILE} tidak ditemukan!")
